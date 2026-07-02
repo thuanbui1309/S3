@@ -18,7 +18,7 @@ class CustomDataset(Dataset):
         return len(self.seqs_labels_path_pair)
 
     def __getitem__(self, idx):
-        subject_id = int(self.seqs_labels_path_pair[idx][0].split('\\')[-2].split('_')[0]) - 1
+        subject_id = int(os.path.basename(os.path.dirname(self.seqs_labels_path_pair[idx][0])).split('_')[0]) - 1
         seq_path = self.seqs_labels_path_pair[idx][0]
         label_path = self.seqs_labels_path_pair[idx][1]
         event_path = self.seqs_labels_path_pair[idx][2]

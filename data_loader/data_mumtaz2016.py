@@ -21,7 +21,7 @@ class CustomDataset(Dataset):
         return len(self.seqs_labels_path_pair)
 
     def __getitem__(self, idx):
-        subject = self.seqs_labels_path_pair[idx][0].split('\\')[-2]
+        subject = os.path.basename(os.path.dirname(self.seqs_labels_path_pair[idx][0]))
         HorMDD = subject.split(' ')[0]
         Sid = int(subject.split(' ')[1][1:]) - 1
         if HorMDD == 'H':

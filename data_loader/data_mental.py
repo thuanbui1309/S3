@@ -17,7 +17,7 @@ class CustomDataset(Dataset):
         return len(self.seqs_labels_path_pair)
 
     def __getitem__(self, idx):
-        subject = self.seqs_labels_path_pair[idx][0].split('\\')[-2]
+        subject = os.path.basename(os.path.dirname(self.seqs_labels_path_pair[idx][0]))
         subject_id = int(subject[7:])
         seq_path = self.seqs_labels_path_pair[idx][0]
         label_path = self.seqs_labels_path_pair[idx][1]
@@ -48,9 +48,10 @@ class CustomDataset(Dataset):
 
         for subject_seq, subject_label, subject_event in zip(subject_dirs_seq, subject_dirs_labels, subject_dirs_events):
             # subject_pairs = []
-            seq_fnames = os.listdir(subject_seq)
-            label_fnames = os.listdir(subject_label)
-            events_fnames = os.listdir(subject_event)
+            # NOTE(linux-port): sort so seq/label/event zip is aligned (ext4 listdir is hash-ordered).
+            seq_fnames = sorted(os.listdir(subject_seq))
+            label_fnames = sorted(os.listdir(subject_label))
+            events_fnames = sorted(os.listdir(subject_event))
             for seq_fname, label_fname, events_fname in zip(seq_fnames, label_fnames, events_fnames):
                 subject_pairs = [os.path.join(subject_seq, seq_fname),
                                  os.path.join(subject_label, label_fname),

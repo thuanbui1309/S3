@@ -2,8 +2,7 @@
 import torch
 from mne.io import concatenate_raws
 from edf_ import read_raw_edf
-import matplotlib.pyplot as plt
-import mne
+import mne  # NOTE(linux-port): removed unused `import matplotlib.pyplot as plt` (not a dep; was unused)
 import os
 import numpy as np
 from tqdm import tqdm
@@ -20,18 +19,22 @@ param.fps = 1
 param.sr = 200
 b2e = Brain2Event(param)
 
-dir_path = r'yourpath\datasets\ISRUC'
+# NOTE(linux-port): POSIX + env-configurable base. Set S3_DATA to the repo data root.
+# Raw ISRUC lives at   $S3_DATA/datasets/ISRUC/{n}/{n}.rec  and  {n}/{n}_1.txt
+# Outputs written to   $S3_DATA/datasets/ISRUC/{seq,labels,events}/ISRUC-group1-{n}/
+BASE = os.environ.get('S3_DATA', './data')
+dir_path = os.path.join(BASE, 'datasets', 'ISRUC')
 
-seq_dir = r'yourpath\datasets\ISRUC\seq'
-label_dir = r'yourpath\datasets\ISRUC\labels'
-event_dir = r'yourpath\datasets\ISRUC\events'
+seq_dir = os.path.join(dir_path, 'seq')
+label_dir = os.path.join(dir_path, 'labels')
+event_dir = os.path.join(dir_path, 'events')
 
 psg_f_names = []
 label_f_names = []
 for i in range(1, 101):
     numstr = str(i)
-    psg_f_names.append(f'{dir_path}/{numstr}/{numstr}.rec')
-    label_f_names.append(f'{dir_path}/{numstr}/{numstr}_1.txt')
+    psg_f_names.append(os.path.join(dir_path, numstr, f'{numstr}.rec'))
+    label_f_names.append(os.path.join(dir_path, numstr, f'{numstr}_1.txt'))
 
 # psg_f_names.sort()
 # label_f_names.sort()
@@ -59,7 +62,7 @@ for psg_f_name, label_f_name in tqdm(psg_label_f_pairs):
     n += 1
     labels_list = []
 
-    raw = read_raw_edf(os.path.join(dir_path, psg_f_name), preload=True)
+    raw = read_raw_edf(psg_f_name, preload=True)  # NOTE(linux-port): psg_f_name is already a full path (was double-joined)
     # raw.pick_channels(signal_name)
     # raw.resample(sfreq=200)
     raw.filter(0.3, 35, fir_design='firwin')
@@ -83,7 +86,7 @@ for psg_f_name, label_f_name in tqdm(psg_label_f_pairs):
     epochs_seq = psg_array.transpose(0, 1, 3, 2)
     # print(epochs_seq.shape)
 
-    for line in open(os.path.join(dir_path, label_f_name)).readlines():
+    for line in open(label_f_name).readlines():  # NOTE(linux-port): label_f_name is already a full path (was double-joined)
         line_str = line.strip()
         if line_str != '':
             labels_list.append(label2id[line_str])

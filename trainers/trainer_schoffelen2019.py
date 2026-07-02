@@ -308,8 +308,8 @@ class Trainer(object):
                 os.remove(self.save_dir_snn)
 
         top10_50, top10_all, spike_loss = values
-        self.save_dir_ann = self.args.save_dir + r"\ann_epoch{}_10@50_{:.5f}_10@All_{:.5f}.pth".format(self.best_epoch, top10_50, top10_all)
-        self.save_dir_snn = self.args.save_dir + r"\snn_epoch{}_spike_{:.5f}.pth".format(self.best_epoch, spike_loss)
+        self.save_dir_ann = self.args.save_dir + r"/ann_epoch{}_10@50_{:.5f}_10@All_{:.5f}.pth".format(self.best_epoch, top10_50, top10_all)
+        self.save_dir_snn = self.args.save_dir + r"/snn_epoch{}_spike_{:.5f}.pth".format(self.best_epoch, spike_loss)
         os.makedirs(os.path.dirname(self.save_dir_ann), exist_ok=True)
         os.makedirs(os.path.dirname(self.save_dir_snn), exist_ok=True)
 

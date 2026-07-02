@@ -26,7 +26,7 @@ class CustomDataset(Dataset):
         return len((self.seqs_labels_path_pair))
 
     def __getitem__(self, idx):
-        subject_id = subjects_id.index(self.seqs_labels_path_pair[idx][0].split('\\')[-2])
+        subject_id = subjects_id.index(os.path.basename(os.path.dirname(self.seqs_labels_path_pair[idx][0])))
         seq_path = self.seqs_labels_path_pair[idx][0]
         label_path = self.seqs_labels_path_pair[idx][1]
         event_path = self.seqs_labels_path_pair[idx][2]
@@ -57,7 +57,7 @@ class AllData(Dataset):
         return len((self.seqs_labels_path_pair))
 
     def __getitem__(self, idx):
-        subject_id = subjects_id.index(self.seqs_labels_path_pair[idx][0].split('\\')[-2])
+        subject_id = subjects_id.index(os.path.basename(os.path.dirname(self.seqs_labels_path_pair[idx][0])))
         seq_path = self.seqs_labels_path_pair[idx][0]
         label_path = self.seqs_labels_path_pair[idx][1]
         event_path = self.seqs_labels_path_pair[idx][2]

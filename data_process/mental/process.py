@@ -4,7 +4,11 @@ from models.utils import Brain2Event
 import torch
 from tqdm import tqdm
 
-root_dir = r'yourpath\datasets\MentalArithmetic'
+# NOTE(linux-port): POSIX + env-configurable. S3_MENTAL_RAW = folder holding the PhysioNet .edf files
+# (SubjectXX_1.edf = rest/label 0, SubjectXX_2.edf = task/label 1). Outputs -> $S3_DATA/datasets/MentalArithmetic/{mode}/.
+BASE = os.environ.get('S3_DATA', './data')
+root_dir = os.environ.get('S3_MENTAL_RAW', os.path.join(BASE, 'datasets', 'MentalArithmetic', 'raw'))
+out_base = os.path.join(BASE, 'datasets', 'MentalArithmetic')
 files = [file for file in os.listdir(root_dir)]
 files = sorted(files)
 print(files)
@@ -35,9 +39,9 @@ param.sr = 200
 b2e = Brain2Event(param)
 
 for files_key in files_dict.keys():
-    seq_dir = rf'yourpath\datasets\MentalArithmetic\{files_key}\seq'
-    label_dir = rf'yourpath\datasets\MentalArithmetic\{files_key}\labels'
-    event_dir = rf'yourpath\datasets\MentalArithmetic\{files_key}\events'
+    seq_dir = os.path.join(out_base, files_key, 'seq')
+    label_dir = os.path.join(out_base, files_key, 'labels')
+    event_dir = os.path.join(out_base, files_key, 'events')
     for file in tqdm(files_dict[files_key]):
         if '.edf' not in file:
             continue
@@ -63,12 +67,12 @@ for files_key in files_dict.keys():
             epochs_events.append(events)
         epochs_events = torch.stack(epochs_events)
 
-        os.makedirs(rf"{seq_dir}\{subject_id}", exist_ok=True)
-        os.makedirs(rf"{label_dir}\{subject_id}", exist_ok=True)
-        os.makedirs(rf"{event_dir}\{subject_id}", exist_ok=True)
+        os.makedirs(os.path.join(seq_dir, subject_id), exist_ok=True)
+        os.makedirs(os.path.join(label_dir, subject_id), exist_ok=True)
+        os.makedirs(os.path.join(event_dir, subject_id), exist_ok=True)
         num = 0
         for eeg, label, event in zip(eeg_array, labels, epochs_events):
-            torch.save(eeg.clone(), rf"{seq_dir}\{subject_id}\{num}_{label_s}.pth")
-            torch.save(label.clone(), rf"{label_dir}\{subject_id}\{num}_{label_s}.pth")
-            torch.save(event.clone(), rf"{event_dir}\{subject_id}\{num}_{label_s}.pth")
+            torch.save(eeg.clone(), os.path.join(seq_dir, subject_id, f"{num}_{label_s}.pth"))
+            torch.save(label.clone(), os.path.join(label_dir, subject_id, f"{num}_{label_s}.pth"))
+            torch.save(event.clone(), os.path.join(event_dir, subject_id, f"{num}_{label_s}.pth"))
             num += 1

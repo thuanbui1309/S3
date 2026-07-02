@@ -4,17 +4,20 @@ import random
 from models.snn import SAS
 from models.utils import *
 
+# NOTE(linux-port): removed schoffelen2019 / gwilliams2022 — these MEG datasets have a trainer
+# but NO data_loader/model/process module on disk, so importing them raised ModuleNotFoundError
+# for EVERY run (even ISRUC). They are non-reproducible stubs (not among the paper's 13 datasets).
 from data_loader import data_isruc, data_broderick2019, data_brennan2019, data_mumtaz2016, data_mental, data_shumi,\
-    data_tuab, data_tuev, data_bcic2020, data_schoffelen2019, data_gwilliams2022, data_seedvig, data_seedv, data_faced, data_physio
+    data_tuab, data_tuev, data_bcic2020, data_seedvig, data_seedv, data_faced, data_physio
 from models import model_isruc, model_broderick2019, model_brennan2019, model_mumtaz2016, model_mental, model_shumi,\
-    model_tuab, model_tuev, model_bcic2020, model_schoffelen2019, model_gwilliams2022, model_seedvig, model_seedv, model_faced, model_physio
+    model_tuab, model_tuev, model_bcic2020, model_seedvig, model_seedv, model_faced, model_physio
 from trainers import trainer_isruc, trainer_broderick2019, trainer_brennan2019, trainer_mumtaz2016, trainer_mental, trainer_shumi,\
-    trainer_tuab, trainer_tuev, trainer_bcic2020, trainer_schoffelen2019, trainer_gwilliams2022, trainer_seedvig, trainer_seedv, trainer_faced, trainer_physio
+    trainer_tuab, trainer_tuev, trainer_bcic2020, trainer_seedvig, trainer_seedv, trainer_faced, trainer_physio
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--base_dir', type=str, default=r"E:\NIPS2026")
+    parser.add_argument('--base_dir', type=str, default="./data")
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--max_epoch', type=int, default=30)
     parser.add_argument('--early_stop_epoch', type=int, default=20)
@@ -27,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--label_smoothing', type=float, default=0.1)
 
     parser.add_argument('--datasets', type=str, default='ISRUC',
-                        choices=['brennan2019', 'broderick2019', 'schoffelen2019', 'gwilliams2022',
+                        choices=['brennan2019', 'broderick2019',
                                  'SEED-VIG',
                                  'ISRUC', 'TUEV', 'BCIC2020', 'SEED-V', 'FACED', 'PhysioNet-MI',
                                  'Mumtaz2016', 'MentalArithmetic', 'TUAB', 'SHU-MI'])
@@ -42,9 +45,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--ckpt_snn', type=str, default=None)
     parser.add_argument('--ckpt_ann', type=str, default=None)
-    parser.add_argument('--save_dir', type=str, default=r"yourpath\ckpt")
+    parser.add_argument('--save_dir', type=str, default="./ckpt")
     parser.add_argument('--load_lbm', action='store_true', default=False)
-    parser.add_argument('--foundation_dir', type=str, default=r"yourpath\ckpt\cbramod-base.pth")
+    parser.add_argument('--foundation_dir', type=str, default="./ckpt/cbramod-base.pth")
     parser.add_argument('--frozen_ann', action='store_true', default=False)
     parser.add_argument('--frozen_snn', action='store_true', default=False)
     parser.add_argument('--frozen_lbm', action='store_true', default=False)
@@ -205,26 +208,7 @@ if __name__ == '__main__':
         eeg_model = model_brennan2019.Model(args)
         snn_model = SAS(args)
         trainer = trainer_brennan2019
-    elif args.datasets == 'schoffelen2019':
-        args.n_subjects = 30
-        args.n_channels = 273
-        args.sr = 120
-        args.fps = 4
-        data_loaders = data_schoffelen2019.LoadDataset(args)
-        data_loaders = data_loaders.get_data_loader()
-        eeg_model = model_schoffelen2019.Model(args)
-        snn_model = SAS(args)
-        trainer = trainer_schoffelen2019
-    elif args.datasets == 'gwilliams2022':
-        args.n_subjects = 27
-        args.n_channels = 208
-        args.sr = 120
-        args.fps = 2
-        data_loaders = data_gwilliams2022.LoadDataset(args)
-        data_loaders = data_loaders.get_data_loader()
-        eeg_model = model_gwilliams2022.Model(args)
-        snn_model = SAS(args)
-        trainer = trainer_gwilliams2022
+    # NOTE(linux-port): schoffelen2019 / gwilliams2022 dispatch removed — see import note above.
 
     # optimizer and scheduler
     backbone_params = []

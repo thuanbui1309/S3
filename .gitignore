@@ -1,0 +1,16 @@
+# Research epic docs (strategic notes) + baseline paper PDFs — KEEP LOCAL, don't push to public fork
+plans
+paper
+
+# Python
+__pycache__/
+*.pyc
+
+# Weights / data / checkpoints / caches
+ckpt/
+data/
+*.pth
+cache/
+
+# Env freeze dumps
+env_*.txt

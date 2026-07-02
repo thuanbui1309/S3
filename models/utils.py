@@ -9,14 +9,14 @@ import numpy as np
 import typing as tp
 from pathlib import Path
 from typing import Union
-import soundfile as sf
-import julius
 import torch
-import torchaudio
 from scipy.interpolate import splrep, splev
 from scipy.signal import resample_poly
-from transformers import Wav2Vec2FeatureExtractor
-from transformers import Wav2Vec2Model
+# NOTE(linux-port): soundfile / julius / torchaudio / transformers are imported LAZILY inside
+# wav_processor's methods below. They are only needed for the speech-perception tasks
+# (Brennan2019 / Broderick2019). Keeping them at module top forced EVERY non-speech run
+# (e.g. ISRUC) to have these heavy deps installed — and they are absent from requirements.txt,
+# so `from models.utils import ...` crashed on a clean env even for ISRUC.
 
 
 class Brain2Event:
@@ -225,6 +225,7 @@ class GroupCosineAnnealingLR(torch.optim.lr_scheduler._LRScheduler):
 
 class wav_processor:
     def __init__(self, model_name="facebook/wav2vec2-base-10k-voxpopuli"):
+        from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2Model  # lazy (speech-only)
         self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model_name)
         self.model = Wav2Vec2Model.from_pretrained(model_name)
         self.model.eval()
@@ -256,6 +257,8 @@ class wav_processor:
             return torch.tensor(rep)
 
     def extract_wav(self, filepath, onset: float, offset: float):
+        import soundfile as sf  # lazy (speech-only)
+        import torchaudio       # lazy (speech-only)
         try:
             info = torchaudio.info(filepath)
             sr = float(info.sample_rate)
@@ -271,6 +274,7 @@ class wav_processor:
         return wav, sr
 
     def wav2vec(self, sound_event, start: float, stop: float):
+        import julius  # lazy (speech-only)
         sound_start = np.array(sound_event['start'].tolist())
         index = (sound_start > start).argmax()
         index -= 1

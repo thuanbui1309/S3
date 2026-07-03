@@ -217,7 +217,16 @@ class Trainer(object):
                         optim_state['param_groups'][0]['lr'], (timer() - start_time) / 60)
                 )
                 # print(cm)
-                if acc > acc_best:
+                # NOTE(reproduce-fidelity, S5 2026-07-03): paper documents "Binary: Monitor = AUROC"
+                # (PAPER §5 / Appendix D), but released code selected best-val on balanced-accuracy.
+                # On the tiny Mental val set (57 samples) balanced-acc is very noisy and peaks at
+                # epoch 0-1 -> the MCMC segmenter (paper: converges 40-60 ep) never gets selected,
+                # so S3 tested an ~untrained segmenter (repro 76.0 < frozen 78.8). Align selection to
+                # the documented monitor. Default = auroc; set args.monitor='bacc' to restore old code.
+                monitor = getattr(self.args, 'monitor', 'auroc')
+                cur_metric = roc_auc if monitor == 'auroc' else acc
+                best_metric = roc_auc_best if monitor == 'auroc' else acc_best
+                if cur_metric > best_metric:
                     print("val metric increasing....saving weights !! ")
                     print(
                         "Val Evaluation: acc: {:.5f}, pr_auc: {:.5f}, roc_auc: {:.5f}, spike_loss: {:.3f}".format(

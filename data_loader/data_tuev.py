@@ -3,7 +3,6 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import os
 import random
-import lmdb
 import pickle
 from scipy import signal
 

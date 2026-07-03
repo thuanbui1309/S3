@@ -1,18 +1,28 @@
 import argparse
+import importlib
 import random
 
 from models.snn import SAS
 from models.utils import *
 
-# NOTE(linux-port): removed schoffelen2019 / gwilliams2022 — these MEG datasets have a trainer
-# but NO data_loader/model/process module on disk, so importing them raised ModuleNotFoundError
-# for EVERY run (even ISRUC). They are non-reproducible stubs (not among the paper's 13 datasets).
-from data_loader import data_isruc, data_broderick2019, data_brennan2019, data_mumtaz2016, data_mental, data_shumi,\
-    data_tuab, data_tuev, data_bcic2020, data_seedvig, data_seedv, data_faced, data_physio
-from models import model_isruc, model_broderick2019, model_brennan2019, model_mumtaz2016, model_mental, model_shumi,\
-    model_tuab, model_tuev, model_bcic2020, model_seedvig, model_seedv, model_faced, model_physio
-from trainers import trainer_isruc, trainer_broderick2019, trainer_brennan2019, trainer_mumtaz2016, trainer_mental, trainer_shumi,\
-    trainer_tuab, trainer_tuev, trainer_bcic2020, trainer_seedvig, trainer_seedv, trainer_faced, trainer_physio
+# NOTE(linux-port): main.py only ever runs ONE dataset (see --datasets dispatch below), but it
+# historically imported all 13 loaders/models/trainers eagerly — so a missing OPTIONAL dep in any
+# UNUSED dataset crashed every run (faiss for the speech-regression trainers, lmdb for the TU*
+# loaders). We import each module defensively: a module whose deps are absent resolves to None and
+# only matters if that dataset is actually selected. Subset datasets (ISRUC / MentalArithmetic /
+# SEED-VIG) import cleanly. schoffelen2019 / gwilliams2022 stay excluded — they have a trainer but
+# NO loader/model/process on disk (non-reproducible stubs, not among the paper's 13 datasets).
+_DATASET_SUFFIXES = ['isruc', 'broderick2019', 'brennan2019', 'mumtaz2016', 'mental', 'shumi',
+                     'tuab', 'tuev', 'bcic2020', 'seedvig', 'seedv', 'faced', 'physio']
+for _pkg, _prefix in [('data_loader', 'data_'), ('models', 'model_'), ('trainers', 'trainer_')]:
+    for _suf in _DATASET_SUFFIXES:
+        _name = f'{_prefix}{_suf}'
+        try:
+            globals()[_name] = importlib.import_module(f'{_pkg}.{_name}')
+        except ImportError as _err:
+            globals()[_name] = None
+            print(f"[linux-port] skip optional module {_pkg}.{_name} ({_err}); "
+                  f"only affects --datasets that need it")
 
 
 if __name__ == '__main__':
